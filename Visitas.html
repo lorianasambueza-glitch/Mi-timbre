@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Visitas - LS Impresiones</title>
+
+  <style>
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: #f7f2f8;
+      padding: 20px;
+      color: #222;
+    }
+
+    .contenedor {
+      max-width: 650px;
+      margin: auto;
+    }
+
+    h1 {
+      text-align: center;
+      margin-bottom: 5px;
+    }
+
+    .subtitulo {
+      text-align: center;
+      color: #777;
+      margin-bottom: 25px;
+    }
+
+    .mensaje {
+      background: white;
+      border-radius: 18px;
+      padding: 18px;
+      margin-bottom: 15px;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+    }
+
+    .nombre {
+      font-size: 21px;
+      font-weight: bold;
+      margin-bottom: 12px;
+    }
+
+    .dato {
+      margin: 7px 0;
+      font-size: 16px;
+    }
+
+    .fecha {
+      margin-top: 12px;
+      color: #888;
+      font-size: 14px;
+    }
+
+    .vacio {
+      background: white;
+      padding: 25px;
+      border-radius: 18px;
+      text-align: center;
+      color: #777;
+    }
+  </style>
+</head>
+
+<body>
+
+<div class="contenedor">
+
+  <h1>📬 Visitas</h1>
+  <div class="subtitulo">LS Impresiones</div>
+
+  <div id="lista">
+    <div class="vacio">Cargando mensajes...</div>
+  </div>
+
+</div>
+
+<script>
+
+const FIREBASE =
+"https://mi-timbre-23084-default-rtdb.firebaseio.com";
+
+async function cargarMensajes() {
+
+  const lista = document.getElementById("lista");
+
+  try {
+
+    const respuesta =
+      await fetch(FIREBASE + "/mensajes.json");
+
+    const datos = await respuesta.json();
+
+    if (!datos) {
+      lista.innerHTML =
+        '<div class="vacio">No hay mensajes todavía.</div>';
+      return;
+    }
+
+    const mensajes = Object.values(datos).reverse();
+
+    lista.innerHTML = "";
+
+    mensajes.forEach(m => {
+
+      const tarjeta = document.createElement("div");
+      tarjeta.className = "mensaje";
+
+      const nombre = document.createElement("div");
+      nombre.className = "nombre";
+      nombre.textContent = "👤 " + (m.nombre || "Sin nombre");
+
+      const contacto = document.createElement("div");
+      contacto.className = "dato";
+      contacto.textContent =
+        "📱 " + (m.contacto || "Sin contacto");
+
+      const motivo = document.createElement("div");
+      motivo.className = "dato";
+      motivo.textContent =
+        "💬 " + (m.motivo || "Sin mensaje");
+
+      const fecha = document.createElement("div");
+      fecha.className = "fecha";
+      fecha.textContent =
+        "🕒 " + (m.fechaHora || "Sin fecha");
+
+      tarjeta.appendChild(nombre);
+      tarjeta.appendChild(contacto);
+      tarjeta.appendChild(motivo);
+      tarjeta.appendChild(fecha);
+
+      lista.appendChild(tarjeta);
+
+    });
+
+  } catch (error) {
+
+    lista.innerHTML =
+      '<div class="vacio">No se pudieron cargar los mensajes.</div>';
+
+  }
+}
+
+cargarMensajes();
+
+</script>
+
+</body>
+</html>
