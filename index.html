@@ -3,87 +3,413 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Timbre virtual</title>
+  <title>Timbre virtual - LS Impresiones</title>
+
   <style>
+    * {
+      box-sizing: border-box;
+    }
+
     body {
       margin: 0;
+      min-height: 100vh;
       font-family: Arial, sans-serif;
-      background: #f5f5f5;
+      background: #f7f2f8;
       display: flex;
       justify-content: center;
       align-items: center;
-      min-height: 100vh;
+      padding: 20px;
     }
 
     .card {
       background: white;
-      padding: 32px 24px;
-      border-radius: 18px;
+      width: 100%;
+      max-width: 420px;
+      padding: 28px 22px;
+      border-radius: 22px;
+      box-shadow: 0 8px 28px rgba(0,0,0,0.12);
       text-align: center;
-      box-shadow: 0 8px 25px rgba(0,0,0,0.12);
-      width: 90%;
-      max-width: 380px;
     }
 
     h1 {
+      margin: 0 0 8px;
       font-size: 30px;
-      margin-bottom: 10px;
     }
 
-    p {
+    .subtitulo {
+      color: #666;
+      margin-bottom: 18px;
+    }
+
+    #estado {
+      padding: 12px;
+      border-radius: 14px;
+      font-weight: bold;
+      margin: 15px 0;
+    }
+
+    .disponible {
+      background: #e5f7ea;
+      color: #167a35;
+    }
+
+    .nodisponible {
+      background: #fde8e8;
+      color: #a72828;
+    }
+
+    .cargando {
+      background: #f1f1f1;
       color: #555;
-      font-size: 18px;
     }
 
     button {
-      margin-top: 20px;
       width: 100%;
-      padding: 20px;
-      font-size: 22px;
-      font-weight: bold;
+      padding: 17px;
+      margin-top: 12px;
       border: none;
       border-radius: 14px;
-      background: #222;
-      color: white;
+      font-size: 19px;
+      font-weight: bold;
       cursor: pointer;
     }
 
-    button:active {
-      transform: scale(0.98);
+    #btnTimbre {
+      background: #222;
+      color: white;
     }
 
-    #mensaje {
-      margin-top: 20px;
-      font-size: 18px;
+    #btnEnviar {
+      background: #d85ca5;
+      color: white;
+    }
+
+    #mensajeTimbre,
+    #respuestaFormulario {
+      margin-top: 12px;
       font-weight: bold;
-      color: #2e7d32;
+    }
+
+    .formulario {
+      margin-top: 26px;
+      padding-top: 22px;
+      border-top: 1px solid #ddd;
+      text-align: left;
+    }
+
+    .formulario h2 {
+      text-align: center;
+      font-size: 21px;
+      margin-bottom: 8px;
+    }
+
+    .formulario p {
+      text-align: center;
+      color: #666;
+      font-size: 14px;
+    }
+
+    label {
+      display: block;
+      margin-top: 14px;
+      margin-bottom: 5px;
+      font-weight: bold;
+    }
+
+    input,
+    textarea {
+      width: 100%;
+      padding: 12px;
+      border: 1px solid #ccc;
+      border-radius: 10px;
+      font-size: 16px;
+      font-family: Arial, sans-serif;
+    }
+
+    textarea {
+      min-height: 95px;
+      resize: vertical;
+    }
+
+    .oculto {
+      display: none;
+    }
+
+    .pie {
+      margin-top: 24px;
+      color: #888;
+      font-size: 13px;
     }
   </style>
 </head>
 
 <body>
+
   <div class="card">
+
     <h1>🔔 Timbre</h1>
-    <p>¿Estás afuera?</p>
-    <button onclick="tocarTimbre()">🔔 TOCAR TIMBRE</button>
-    <div id="mensaje"></div>
+    <div class="subtitulo">LS Impresiones</div>
+
+    <div id="estado" class="cargando">
+      Consultando disponibilidad...
+    </div>
+
+    <div id="zonaTimbre" class="oculto">
+      <p>¿Estás afuera? Tocá el timbre para avisarnos que llegaste.</p>
+
+      <button id="btnTimbre" onclick="tocarTimbre()">
+        🔔 TOCAR TIMBRE
+      </button>
+
+      <div id="mensajeTimbre"></div>
+    </div>
+
+    <div id="mensajeAusente" class="oculto">
+      <p>
+        En este momento no nos encontramos.
+        Si querés, podés dejarnos tus datos y contarnos a qué viniste.
+      </p>
+    </div>
+
+    <div class="formulario">
+      <h2>📝 Dejar un mensaje</h2>
+      <p>También podés dejarnos tus datos para que podamos contactarte.</p>
+
+      <label for="nombre">Nombre</label>
+      <input
+        type="text"
+        id="nombre"
+        maxlength="60"
+        placeholder="Tu nombre"
+      >
+
+      <label for="contacto">Teléfono o WhatsApp</label>
+      <input
+        type="text"
+        id="contacto"
+        maxlength="40"
+        placeholder="Ej: 299..."
+      >
+
+      <label for="motivo">¿A qué viniste?</label>
+      <textarea
+        id="motivo"
+        maxlength="300"
+        placeholder="Ej: Vine a retirar un pedido..."
+      ></textarea>
+
+      <button id="btnEnviar" onclick="enviarMensaje()">
+        💌 ENVIAR MENSAJE
+      </button>
+
+      <div id="respuestaFormulario"></div>
+    </div>
+
+    <div class="pie">
+      Gracias por tu visita 💕
+    </div>
+
   </div>
 
-  <script>
-    function tocarTimbre() {
-      fetch("https://ntfy.sh/timbre-loly-Nqn-84726-XP", {
+
+<script>
+
+const FIREBASE =
+  "https://mi-timbre-23084-default-rtdb.firebaseio.com";
+
+const TOPIC =
+  "timbre-loly-Nqn-84726-XP";
+
+
+/* CONSULTAR SI ESTÁS DISPONIBLE */
+
+async function consultarEstado() {
+
+  const estado = document.getElementById("estado");
+  const zonaTimbre = document.getElementById("zonaTimbre");
+  const mensajeAusente = document.getElementById("mensajeAusente");
+
+  try {
+
+    const respuesta = await fetch(
+      FIREBASE + "/estado/disponible.json?nocache=" + Date.now()
+    );
+
+    const disponible = await respuesta.json();
+
+    if (disponible === true) {
+
+      estado.innerText = "🟢 Estamos disponibles";
+      estado.className = "disponible";
+
+      zonaTimbre.classList.remove("oculto");
+      mensajeAusente.classList.add("oculto");
+
+    } else {
+
+      estado.innerText = "🔴 En este momento no nos encontramos";
+      estado.className = "nodisponible";
+
+      zonaTimbre.classList.add("oculto");
+      mensajeAusente.classList.remove("oculto");
+    }
+
+  } catch (error) {
+
+    estado.innerText = "No pudimos consultar la disponibilidad";
+    estado.className = "cargando";
+  }
+}
+
+
+/* TOCAR EL TIMBRE */
+
+async function tocarTimbre() {
+
+  const boton = document.getElementById("btnTimbre");
+  const mensaje = document.getElementById("mensajeTimbre");
+
+  boton.disabled = true;
+  boton.innerText = "Avisando... 🔔";
+
+  try {
+
+    await fetch(
+      "https://ntfy.sh/" + TOPIC,
+      {
         method: "POST",
         body: "🔔 Hay alguien en la puerta"
-      })
-      .then(() => {
-        document.getElementById("mensaje").innerText =
-          "✓ Listo, ya avisamos que estás afuera";
-      })
-      .catch(() => {
-        document.getElementById("mensaje").innerText =
-          "No se pudo enviar el aviso. Intentá nuevamente.";
-      });
+      }
+    );
+
+    mensaje.innerText =
+      "✓ Listo, ya avisamos que estás afuera.";
+
+    boton.innerText = "✓ TIMBRE ENVIADO";
+
+  } catch (error) {
+
+    mensaje.innerText =
+      "No se pudo enviar el aviso. Intentá nuevamente.";
+
+    boton.disabled = false;
+    boton.innerText = "🔔 TOCAR TIMBRE";
+  }
+
+  setTimeout(function() {
+
+    boton.disabled = false;
+    boton.innerText = "🔔 TOCAR TIMBRE";
+
+  }, 30000);
+}
+
+
+/* ENVIAR MENSAJE DEL VISITANTE */
+
+async function enviarMensaje() {
+
+  const nombre =
+    document.getElementById("nombre").value.trim();
+
+  const contacto =
+    document.getElementById("contacto").value.trim();
+
+  const motivo =
+    document.getElementById("motivo").value.trim();
+
+  const respuestaFormulario =
+    document.getElementById("respuestaFormulario");
+
+  const boton =
+    document.getElementById("btnEnviar");
+
+
+  if (!nombre || !contacto || !motivo) {
+
+    respuestaFormulario.innerText =
+      "Por favor completá los tres campos.";
+
+    return;
+  }
+
+
+  boton.disabled = true;
+  boton.innerText = "Enviando...";
+
+
+  try {
+
+    const guardar = await fetch(
+      FIREBASE + "/mensajes.json",
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          nombre: nombre,
+          contacto: contacto,
+          motivo: motivo
+        })
+      }
+    );
+
+    if (!guardar.ok) {
+      throw new Error("No se pudo guardar");
     }
-  </script>
+
+
+    /* Aviso genérico a tu celular.
+       Los datos personales quedan en Firebase. */
+
+    try {
+
+      await fetch(
+        "https://ntfy.sh/" + TOPIC,
+        {
+          method: "POST",
+          body: "📩 Te dejaron un nuevo mensaje en el timbre"
+        }
+      );
+
+    } catch (e) {}
+
+
+    respuestaFormulario.innerText =
+      "✓ ¡Gracias! Tu mensaje fue enviado.";
+
+    document.getElementById("nombre").value = "";
+    document.getElementById("contacto").value = "";
+    document.getElementById("motivo").value = "";
+
+    boton.innerText = "✓ MENSAJE ENVIADO";
+
+
+  } catch (error) {
+
+    respuestaFormulario.innerText =
+      "No se pudo enviar el mensaje. Intentá nuevamente.";
+
+    boton.disabled = false;
+    boton.innerText = "💌 ENVIAR MENSAJE";
+
+    return;
+  }
+
+
+  setTimeout(function() {
+
+    boton.disabled = false;
+    boton.innerText = "💌 ENVIAR MENSAJE";
+
+  }, 10000);
+}
+
+
+consultarEstado();
+
+</script>
+
 </body>
 </html>
