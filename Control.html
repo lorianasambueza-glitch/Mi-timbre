@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Control del timbre - LS Impresiones</title>
+
+  <style>
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: Arial, sans-serif;
+      background: #f7f2f8;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 20px;
+    }
+
+    .card {
+      background: white;
+      width: 100%;
+      max-width: 420px;
+      padding: 28px 22px;
+      border-radius: 22px;
+      box-shadow: 0 8px 28px rgba(0,0,0,0.12);
+      text-align: center;
+    }
+
+    h1 {
+      margin: 0 0 5px;
+      font-size: 29px;
+    }
+
+    .subtitulo {
+      color: #777;
+      margin-bottom: 25px;
+    }
+
+    input {
+      width: 100%;
+      padding: 14px;
+      margin-top: 12px;
+      border: 1px solid #ccc;
+      border-radius: 12px;
+      font-size: 16px;
+    }
+
+    button {
+      width: 100%;
+      border: none;
+      border-radius: 15px;
+      padding: 17px;
+      margin-top: 15px;
+      font-size: 18px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    #btnLogin {
+      background: #222;
+      color: white;
+    }
+
+    #btnDisponible {
+      background: #dff5e5;
+      color: #167a35;
+      border: 2px solid #7bc990;
+    }
+
+    #btnNoDisponible {
+      background: #fde3e3;
+      color: #a72828;
+      border: 2px solid #e59a9a;
+    }
+
+    #btnSalir {
+      background: #eee;
+      color: #555;
+      font-size: 15px;
+      padding: 12px;
+      margin-top: 25px;
+    }
+
+    .estadoActual {
+      padding: 16px;
+      border-radius: 15px;
+      margin: 20px 0;
+      font-size: 19px;
+      font-weight: bold;
+      background: #f2f2f2;
+    }
+
+    .mensaje {
+      margin-top: 15px;
+      font-weight: bold;
+    }
+
+    .oculto {
+      display: none;
+    }
+
+    .ayuda {
+      font-size: 13px;
+      color: #888;
+      margin-top: 18px;
+    }
+  </style>
+</head>
+
+<body>
+
+<div class="card">
+
+  <h1>🔔 Mi timbre</h1>
+  <div class="subtitulo">Panel de LS Impresiones</div>
+
+
+  <!-- INICIO DE SESIÓN -->
+
+  <div id="login">
+
+    <p>Ingresá para cambiar el estado del timbre.</p>
+
+    <input
+      type="email"
+      id="email"
+      placeholder="Correo electrónico"
+      autocomplete="email"
+    >
+
+    <input
+      type="password"
+      id="password"
+      placeholder="Contraseña"
+      autocomplete="current-password"
+    >
+
+    <button id="btnLogin">
+      🔐 INGRESAR
+    </button>
+
+    <div id="mensajeLogin" class="mensaje"></div>
+
+  </div>
+
+
+  <!-- PANEL -->
+
+  <div id="panel" class="oculto">
+
+    <div id="estadoActual" class="estadoActual">
+      Consultando estado...
+    </div>
+
+    <button id="btnDisponible">
+      🟢 ESTOY DISPONIBLE
+    </button>
+
+    <button id="btnNoDisponible">
+      🔴 NO ESTOY DISPONIBLE
+    </button>
+
+    <div id="mensajeEstado" class="mensaje"></div>
+
+    <button id="btnSalir">
+      Cerrar sesión
+    </button>
+
+    <div class="ayuda">
+      El cambio se refleja automáticamente en el timbre de la puerta.
+    </div>
+
+  </div>
+
+</div>
+
+
+<script type="module">
+
+  import { initializeApp }
+    from "https://www.gstatic.com/firebasejs/12.19.0/firebase-app.js";
+
+  import {
+    getAuth,
+    signInWithEmailAndPassword,
+    onAuthStateChanged,
+    signOut
+  }
+    from "https://www.gstatic.com/firebasejs/12.19.0/firebase-auth.js";
+
+  import {
+    getDatabase,
+    ref,
+    get,
+    set
+  }
+    from "https://www.gstatic.com/firebasejs/12.19.0/firebase-database.js";
+
+
+  const firebaseConfig = {
+
+    apiKey:
+      "AIzaSyDLL-cg2ihlkIzYxKBWZ525_SC_zGHEwww",
+
+    authDomain:
+      "mi-timbre-23084.firebaseapp.com",
+
+    databaseURL:
+      "https://mi-timbre-23084-default-rtdb.firebaseio.com",
+
+    projectId:
+      "mi-timbre-23084",
+
+    storageBucket:
+      "mi-timbre-23084.firebasestorage.app",
+
+    messagingSenderId:
+      "785685035859",
+
+    appId:
+      "1:785685035859:web:f9c28b50a6ba17630ebfa6"
+
+  };
+
+
+  const app =
+    initializeApp(firebaseConfig);
+
+  const auth =
+    getAuth(app);
+
+  const database =
+    getDatabase(app);
+
+
+  const login =
+    document.getElementById("login");
+
+  const panel =
+    document.getElementById("panel");
+
+  const mensajeLogin =
+    document.getElementById("mensajeLogin");
+
+  const mensajeEstado =
+    document.getElementById("mensajeEstado");
+
+  const estadoActual =
+    document.getElementById("estadoActual");
+
+
+  /* INICIAR SESIÓN */
+
+  document
+    .getElementById("btnLogin")
+    .addEventListener("click", async function () {
+
+      const email =
+        document.getElementById("email").value.trim();
+
+      const password =
+        document.getElementById("password").value;
+
+      mensajeLogin.textContent = "";
+
+
+      if (!email || !password) {
+
+        mensajeLogin.textContent =
+          "Completá el correo y la contraseña.";
+
+        return;
+      }
+
+
+      try {
+
+        await signInWithEmailAndPassword(
+          auth,
+          email,
+          password
+        );
+
+      } catch (error) {
+
+        mensajeLogin.textContent =
+          "No se pudo ingresar. Revisá el correo y la contraseña.";
+
+      }
+
+    });
+
+
+  /* DETECTAR SESIÓN */
+
+  onAuthStateChanged(
+    auth,
+    async function (user) {
+
+      if (
+        user &&
+        user.uid ===
+        "L94F9KS5mNS2IvBTTfWMXF1msNK2"
+      ) {
+
+        login.classList.add("oculto");
+        panel.classList.remove("oculto");
+
+        await consultarEstado();
+
+      } else {
+
+        panel.classList.add("oculto");
+        login.classList.remove("oculto");
+
+      }
+
+    }
+  );
+
+
+  /* CONSULTAR ESTADO */
+
+  async function consultarEstado() {
+
+    try {
+
+      const snapshot =
+        await get(
+          ref(
+            database,
+            "estado/disponible"
+          )
+        );
+
+      const disponible =
+        snapshot.val();
+
+      if (disponible === true) {
+
+        estadoActual.textContent =
+          "🟢 Actualmente estás DISPONIBLE";
+
+      } else {
+
+        estadoActual.textContent =
+          "🔴 Actualmente estás NO DISPONIBLE";
+
+      }
+
+    } catch (error) {
+
+      estadoActual.textContent =
+        "No se pudo consultar el estado.";
+
+    }
+
+  }
+
+
+  /* PONER DISPONIBLE */
+
+  document
+    .getElementById("btnDisponible")
+    .addEventListener("click", async function () {
+
+      await cambiarEstado(true);
+
+    });
+
+
+  /* PONER NO DISPONIBLE */
+
+  document
+    .getElementById("
