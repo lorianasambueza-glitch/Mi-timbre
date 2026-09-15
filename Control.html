@@ -94,18 +94,20 @@
     }
 
     .mensaje {
-      margin-top: 15px;
+      margin-top: 16px;
       font-weight: bold;
+      line-height: 1.4;
+    }
+
+    .error {
+      color: #a72828;
+      background: #fde8e8;
+      padding: 12px;
+      border-radius: 10px;
     }
 
     .oculto {
       display: none;
-    }
-
-    .ayuda {
-      font-size: 13px;
-      color: #888;
-      margin-top: 18px;
     }
   </style>
 </head>
@@ -116,9 +118,6 @@
 
   <h1>🔔 Mi timbre</h1>
   <div class="subtitulo">Panel de LS Impresiones</div>
-
-
-  <!-- INICIO DE SESIÓN -->
 
   <div id="login">
 
@@ -147,8 +146,6 @@
   </div>
 
 
-  <!-- PANEL -->
-
   <div id="panel" class="oculto">
 
     <div id="estadoActual" class="estadoActual">
@@ -169,10 +166,6 @@
       Cerrar sesión
     </button>
 
-    <div class="ayuda">
-      El cambio se refleja automáticamente en el timbre de la puerta.
-    </div>
-
   </div>
 
 </div>
@@ -180,199 +173,292 @@
 
 <script type="module">
 
-  import { initializeApp }
-    from "https://www.gstatic.com/firebasejs/12.19.0/firebase-app.js";
+import { initializeApp }
+from "https://www.gstatic.com/firebasejs/12.19.0/firebase-app.js";
 
-  import {
-    getAuth,
-    signInWithEmailAndPassword,
-    onAuthStateChanged,
-    signOut
+import {
+  getAuth,
+  signInWithEmailAndPassword,
+  onAuthStateChanged,
+  signOut
+}
+from "https://www.gstatic.com/firebasejs/12.19.0/firebase-auth.js";
+
+import {
+  getDatabase,
+  ref,
+  get,
+  set
+}
+from "https://www.gstatic.com/firebasejs/12.19.0/firebase-database.js";
+
+
+const firebaseConfig = {
+  apiKey: "AIzaSyDLL-cg2ihlkIzYxKBWZ525_SC_zGHEwww",
+  authDomain: "mi-timbre-23084.firebaseapp.com",
+  databaseURL: "https://mi-timbre-23084-default-rtdb.firebaseio.com",
+  projectId: "mi-timbre-23084",
+  storageBucket: "mi-timbre-23084.firebasestorage.app",
+  messagingSenderId: "785685035859",
+  appId: "1:785685035859:web:f9c28b50a6ba17630ebfa6"
+};
+
+
+const UID_ADMIN =
+"L94F9KS5mNS2IvBTTfWMXF1msNK2";
+
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const database = getDatabase(app);
+
+
+const login =
+document.getElementById("login");
+
+const panel =
+document.getElementById("panel");
+
+const mensajeLogin =
+document.getElementById("mensajeLogin");
+
+const mensajeEstado =
+document.getElementById("mensajeEstado");
+
+const estadoActual =
+document.getElementById("estadoActual");
+
+const btnLogin =
+document.getElementById("btnLogin");
+
+
+/* INGRESAR */
+
+btnLogin.addEventListener(
+"click",
+async function () {
+
+  const email =
+  document.getElementById("email").value.trim();
+
+  const password =
+  document.getElementById("password").value;
+
+  mensajeLogin.className = "mensaje";
+  mensajeLogin.textContent = "";
+
+  if (!email || !password) {
+
+    mensajeLogin.className =
+    "mensaje error";
+
+    mensajeLogin.textContent =
+    "Completá el correo y la contraseña.";
+
+    return;
   }
-    from "https://www.gstatic.com/firebasejs/12.19.0/firebase-auth.js";
-
-  import {
-    getDatabase,
-    ref,
-    get,
-    set
-  }
-    from "https://www.gstatic.com/firebasejs/12.19.0/firebase-database.js";
 
 
-  const firebaseConfig = {
-
-    apiKey:
-      "AIzaSyDLL-cg2ihlkIzYxKBWZ525_SC_zGHEwww",
-
-    authDomain:
-      "mi-timbre-23084.firebaseapp.com",
-
-    databaseURL:
-      "https://mi-timbre-23084-default-rtdb.firebaseio.com",
-
-    projectId:
-      "mi-timbre-23084",
-
-    storageBucket:
-      "mi-timbre-23084.firebasestorage.app",
-
-    messagingSenderId:
-      "785685035859",
-
-    appId:
-      "1:785685035859:web:f9c28b50a6ba17630ebfa6"
-
-  };
+  btnLogin.disabled = true;
+  btnLogin.textContent = "Ingresando...";
 
 
-  const app =
-    initializeApp(firebaseConfig);
+  try {
 
-  const auth =
-    getAuth(app);
-
-  const database =
-    getDatabase(app);
-
-
-  const login =
-    document.getElementById("login");
-
-  const panel =
-    document.getElementById("panel");
-
-  const mensajeLogin =
-    document.getElementById("mensajeLogin");
-
-  const mensajeEstado =
-    document.getElementById("mensajeEstado");
-
-  const estadoActual =
-    document.getElementById("estadoActual");
+    const credencial =
+    await signInWithEmailAndPassword(
+      auth,
+      email,
+      password
+    );
 
 
-  /* INICIAR SESIÓN */
+    if (credencial.user.uid !== UID_ADMIN) {
 
-  document
-    .getElementById("btnLogin")
-    .addEventListener("click", async function () {
+      await signOut(auth);
 
-      const email =
-        document.getElementById("email").value.trim();
-
-      const password =
-        document.getElementById("password").value;
-
-      mensajeLogin.textContent = "";
-
-
-      if (!email || !password) {
-
-        mensajeLogin.textContent =
-          "Completá el correo y la contraseña.";
-
-        return;
-      }
-
-
-      try {
-
-        await signInWithEmailAndPassword(
-          auth,
-          email,
-          password
-        );
-
-      } catch (error) {
-
-        mensajeLogin.textContent =
-          "No se pudo ingresar. Revisá el correo y la contraseña.";
-
-      }
-
-    });
-
-
-  /* DETECTAR SESIÓN */
-
-  onAuthStateChanged(
-    auth,
-    async function (user) {
-
-      if (
-        user &&
-        user.uid ===
-        "L94F9KS5mNS2IvBTTfWMXF1msNK2"
-      ) {
-
-        login.classList.add("oculto");
-        panel.classList.remove("oculto");
-
-        await consultarEstado();
-
-      } else {
-
-        panel.classList.add("oculto");
-        login.classList.remove("oculto");
-
-      }
-
+      throw new Error(
+        "Este usuario no está autorizado."
+      );
     }
-  );
 
 
-  /* CONSULTAR ESTADO */
+    mensajeLogin.textContent =
+    "✓ Ingreso correcto";
 
-  async function consultarEstado() {
 
-    try {
+  } catch (error) {
 
-      const snapshot =
-        await get(
-          ref(
-            database,
-            "estado/disponible"
-          )
-        );
+    console.error(error);
 
-      const disponible =
-        snapshot.val();
+    mensajeLogin.className =
+    "mensaje error";
 
-      if (disponible === true) {
+    mensajeLogin.innerHTML =
+      "⚠️ No se pudo ingresar.<br><br>" +
+      "<strong>Error:</strong> " +
+      (error.code || error.message);
 
-        estadoActual.textContent =
-          "🟢 Actualmente estás DISPONIBLE";
+  } finally {
 
-      } else {
+    btnLogin.disabled = false;
+    btnLogin.textContent = "🔐 INGRESAR";
 
-        estadoActual.textContent =
-          "🔴 Actualmente estás NO DISPONIBLE";
+  }
 
-      }
+});
 
-    } catch (error) {
+
+/* CONTROL DE SESIÓN */
+
+onAuthStateChanged(
+auth,
+async function (user) {
+
+  if (
+    user &&
+    user.uid === UID_ADMIN
+  ) {
+
+    login.classList.add("oculto");
+    panel.classList.remove("oculto");
+
+    await consultarEstado();
+
+  } else {
+
+    panel.classList.add("oculto");
+    login.classList.remove("oculto");
+
+  }
+
+});
+
+
+/* CONSULTAR ESTADO */
+
+async function consultarEstado() {
+
+  try {
+
+    const snapshot =
+    await get(
+      ref(
+        database,
+        "estado/disponible"
+      )
+    );
+
+    if (snapshot.val() === true) {
 
       estadoActual.textContent =
-        "No se pudo consultar el estado.";
+      "🟢 Actualmente estás DISPONIBLE";
+
+    } else {
+
+      estadoActual.textContent =
+      "🔴 Actualmente estás NO DISPONIBLE";
 
     }
 
+  } catch (error) {
+
+    estadoActual.textContent =
+    "⚠️ No se pudo consultar el estado.";
+
   }
 
-
-  /* PONER DISPONIBLE */
-
-  document
-    .getElementById("btnDisponible")
-    .addEventListener("click", async function () {
-
-      await cambiarEstado(true);
-
-    });
+}
 
 
-  /* PONER NO DISPONIBLE */
+/* DISPONIBLE */
 
-  document
-    .getElementById("
+document
+.getElementById("btnDisponible")
+.addEventListener(
+"click",
+function () {
+
+  cambiarEstado(true);
+
+});
+
+
+/* NO DISPONIBLE */
+
+document
+.getElementById("btnNoDisponible")
+.addEventListener(
+"click",
+function () {
+
+  cambiarEstado(false);
+
+});
+
+
+/* CAMBIAR ESTADO */
+
+async function cambiarEstado(disponible) {
+
+  mensajeEstado.textContent =
+  "Guardando...";
+
+  try {
+
+    await set(
+      ref(
+        database,
+        "estado/disponible"
+      ),
+      disponible
+    );
+
+
+    if (disponible) {
+
+      estadoActual.textContent =
+      "🟢 Actualmente estás DISPONIBLE";
+
+      mensajeEstado.textContent =
+      "✓ Estado actualizado.";
+
+    } else {
+
+      estadoActual.textContent =
+      "🔴 Actualmente estás NO DISPONIBLE";
+
+      mensajeEstado.textContent =
+      "✓ Estado actualizado.";
+
+    }
+
+  } catch (error) {
+
+    console.error(error);
+
+    mensajeEstado.textContent =
+    "⚠️ Error al cambiar el estado: " +
+    (error.code || error.message);
+
+  }
+
+}
+
+
+/* SALIR */
+
+document
+.getElementById("btnSalir")
+.addEventListener(
+"click",
+async function () {
+
+  await signOut(auth);
+
+});
+
+</script>
+
+</body>
+</html>
