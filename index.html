@@ -348,10 +348,13 @@ async function enviarMensaje() {
           "Content-Type": "application/json"
         },
         body: JSON.stringify({
-          nombre: nombre,
-          contacto: contacto,
-          motivo: motivo
-        })
+    nombre: nombre,
+    contacto: contacto,
+    motivo: motivo,
+    fechaHora: new Date().toLocaleString("es-AR", {
+        timeZone: "America/Argentina/Buenos_Aires"
+    })
+})
       }
     );
 
