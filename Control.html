@@ -94,15 +94,15 @@
     }
 
     .mensaje {
-      margin-top: 16px;
+      margin-top: 15px;
       font-weight: bold;
       line-height: 1.4;
     }
 
     .error {
       color: #a72828;
-      background: #fde8e8;
-      padding: 12px;
+      background: #fde3e3;
+      padding: 10px;
       border-radius: 10px;
     }
 
@@ -120,7 +120,6 @@
   <div class="subtitulo">Panel de LS Impresiones</div>
 
   <div id="login">
-
     <p>Ingresá para cambiar el estado del timbre.</p>
 
     <input
@@ -137,12 +136,9 @@
       autocomplete="current-password"
     >
 
-    <button id="btnLogin">
-      🔐 INGRESAR
-    </button>
+    <button id="btnLogin">🔐 INGRESAR</button>
 
     <div id="mensajeLogin" class="mensaje"></div>
-
   </div>
 
 
@@ -203,122 +199,72 @@ const firebaseConfig = {
   appId: "1:785685035859:web:f9c28b50a6ba17630ebfa6"
 };
 
-
-const UID_ADMIN =
-"L94F9KS5mNS2IvBTTfWMXF1msNK2";
-
+const UID_ADMIN = "L94F9KS5mNS2IvBTTfWMXF1msNK2";
 
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const database = getDatabase(app);
 
-
-const login =
-document.getElementById("login");
-
-const panel =
-document.getElementById("panel");
-
-const mensajeLogin =
-document.getElementById("mensajeLogin");
-
-const mensajeEstado =
-document.getElementById("mensajeEstado");
-
-const estadoActual =
-document.getElementById("estadoActual");
-
-const btnLogin =
-document.getElementById("btnLogin");
+const login = document.getElementById("login");
+const panel = document.getElementById("panel");
+const mensajeLogin = document.getElementById("mensajeLogin");
+const mensajeEstado = document.getElementById("mensajeEstado");
+const estadoActual = document.getElementById("estadoActual");
+const btnLogin = document.getElementById("btnLogin");
 
 
-/* INGRESAR */
+btnLogin.addEventListener("click", async function () {
 
-btnLogin.addEventListener(
-"click",
-async function () {
-
-  const email =
-  document.getElementById("email").value.trim();
-
-  const password =
-  document.getElementById("password").value;
+  const email = document.getElementById("email").value.trim();
+  const password = document.getElementById("password").value;
 
   mensajeLogin.className = "mensaje";
   mensajeLogin.textContent = "";
 
   if (!email || !password) {
-
-    mensajeLogin.className =
-    "mensaje error";
-
-    mensajeLogin.textContent =
-    "Completá el correo y la contraseña.";
-
+    mensajeLogin.className = "mensaje error";
+    mensajeLogin.textContent = "Completá el correo y la contraseña.";
     return;
   }
-
 
   btnLogin.disabled = true;
   btnLogin.textContent = "Ingresando...";
 
-
   try {
 
-    const credencial =
-    await signInWithEmailAndPassword(
+    const credencial = await signInWithEmailAndPassword(
       auth,
       email,
       password
     );
 
-
     if (credencial.user.uid !== UID_ADMIN) {
-
       await signOut(auth);
-
-      throw new Error(
-        "Este usuario no está autorizado."
-      );
+      throw new Error("Usuario no autorizado");
     }
-
-
-    mensajeLogin.textContent =
-    "✓ Ingreso correcto";
-
 
   } catch (error) {
 
     console.error(error);
 
-    mensajeLogin.className =
-    "mensaje error";
+    mensajeLogin.className = "mensaje error";
 
     mensajeLogin.innerHTML =
       "⚠️ No se pudo ingresar.<br><br>" +
-      "<strong>Error:</strong> " +
+      "Error: " +
       (error.code || error.message);
 
   } finally {
 
     btnLogin.disabled = false;
     btnLogin.textContent = "🔐 INGRESAR";
-
   }
-
 });
 
 
-/* CONTROL DE SESIÓN */
+onAuthStateChanged(auth, async function (user) {
 
-onAuthStateChanged(
-auth,
-async function (user) {
-
-  if (
-    user &&
-    user.uid === UID_ADMIN
-  ) {
+  if (user && user.uid === UID_ADMIN) {
 
     login.classList.add("oculto");
     panel.classList.remove("oculto");
@@ -329,108 +275,79 @@ async function (user) {
 
     panel.classList.add("oculto");
     login.classList.remove("oculto");
-
   }
-
 });
 
-
-/* CONSULTAR ESTADO */
 
 async function consultarEstado() {
 
   try {
 
-    const snapshot =
-    await get(
-      ref(
-        database,
-        "estado/disponible"
-      )
+    const snapshot = await get(
+      ref(database, "estado/disponible")
     );
 
     if (snapshot.val() === true) {
 
       estadoActual.textContent =
-      "🟢 Actualmente estás DISPONIBLE";
+        "🟢 Actualmente estás DISPONIBLE";
 
     } else {
 
       estadoActual.textContent =
-      "🔴 Actualmente estás NO DISPONIBLE";
-
+        "🔴 Actualmente estás NO DISPONIBLE";
     }
 
   } catch (error) {
 
     estadoActual.textContent =
-    "⚠️ No se pudo consultar el estado.";
-
+      "⚠️ No se pudo consultar el estado.";
   }
-
 }
 
 
-/* DISPONIBLE */
+document
+  .getElementById("btnDisponible")
+  .addEventListener("click", async function () {
+
+    await cambiarEstado(true);
+  });
+
 
 document
-.getElementById("btnDisponible")
-.addEventListener(
-"click",
-function () {
+  .getElementById("btnNoDisponible")
+  .addEventListener("click", async function () {
 
-  cambiarEstado(true);
+    await cambiarEstado(false);
+  });
 
-});
-
-
-/* NO DISPONIBLE */
-
-document
-.getElementById("btnNoDisponible")
-.addEventListener(
-"click",
-function () {
-
-  cambiarEstado(false);
-
-});
-
-
-/* CAMBIAR ESTADO */
 
 async function cambiarEstado(disponible) {
 
-  mensajeEstado.textContent =
-  "Guardando...";
+  mensajeEstado.textContent = "Guardando...";
 
   try {
 
     await set(
-      ref(
-        database,
-        "estado/disponible"
-      ),
+      ref(database, "estado/disponible"),
       disponible
     );
 
-
-    if (disponible) {
+    if (disponible === true) {
 
       estadoActual.textContent =
-      "🟢 Actualmente estás DISPONIBLE";
+        "🟢 Actualmente estás DISPONIBLE";
 
       mensajeEstado.textContent =
-      "✓ Estado actualizado.";
+        "✓ El timbre ya muestra que estás disponible.";
 
     } else {
 
       estadoActual.textContent =
-      "🔴 Actualmente estás NO DISPONIBLE";
+        "🔴 Actualmente estás NO DISPONIBLE";
 
       mensajeEstado.textContent =
-      "✓ Estado actualizado.";
-
+        "✓ El timbre ya muestra que no estás disponible.";
     }
 
   } catch (error) {
@@ -438,25 +355,20 @@ async function cambiarEstado(disponible) {
     console.error(error);
 
     mensajeEstado.textContent =
-    "⚠️ Error al cambiar el estado: " +
-    (error.code || error.message);
-
+      "⚠️ No se pudo cambiar el estado: " +
+      (error.code || error.message);
   }
-
 }
 
 
-/* SALIR */
-
 document
-.getElementById("btnSalir")
-.addEventListener(
-"click",
-async function () {
+  .getElementById("btnSalir")
+  .addEventListener("click", async function () {
 
-  await signOut(auth);
+    await signOut(auth);
 
-});
+    document.getElementById("password").value = "";
+  });
 
 </script>
 
