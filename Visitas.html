@@ -83,172 +83,156 @@
 
   </div>
 
+  <script type="module">
 
-<script type="module">
+    import { initializeApp }
+    from "https://www.gstatic.com/firebasejs/12.19.0/firebase-app.js";
 
-import { initializeApp }
-from "https://www.gstatic.com/firebasejs/12.19.0/firebase-app.js";
+    import {
+      getAuth,
+      signInAnonymously
+    }
+    from "https://www.gstatic.com/firebasejs/12.19.0/firebase-auth.js";
 
-import {
-  getAuth,
-  signInAnonymously
-}
-from "https://www.gstatic.com/firebasejs/12.19.0/firebase-auth.js";
-
-import {
-  getDatabase,
-  ref,
-  get
-}
-from "https://www.gstatic.com/firebasejs/12.19.0/firebase-database.js";
-
-
-const firebaseConfig = {
-
-  apiKey: "AIzaSyDLL-cg2ihlkIzYxKBWZ525_SC_zGHEwww",
-
-  authDomain:
-  "mi-timbre-23084.firebaseapp.com",
-
-  databaseURL:
-  "https://mi-timbre-23084-default-rtdb.firebaseio.com",
-
-  projectId:
-  "mi-timbre-23084",
-
-  storageBucket:
-  "mi-timbre-23084.firebasestorage.app",
-
-  messagingSenderId:
-  "785685035859",
-
-  appId:
-  "1:785685035859:web:f9c28b50a6ba17630ebfa6"
-
-};
+    import {
+      getDatabase,
+      ref,
+      get
+    }
+    from "https://www.gstatic.com/firebasejs/12.19.0/firebase-database.js";
 
 
-const app = initializeApp(firebaseConfig);
+    const firebaseConfig = {
+      apiKey: "AIzaSyDLL-cg2ihlkIzYxKBWZ525_SC_zGHEwww",
+      authDomain: "mi-timbre-23084.firebaseapp.com",
+      databaseURL: "https://mi-timbre-23084-default-rtdb.firebaseio.com",
+      projectId: "mi-timbre-23084",
+      storageBucket: "mi-timbre-23084.firebasestorage.app",
+      messagingSenderId: "785685035859",
+      appId: "1:785685035859:web:f9c28b50a6ba17630ebfa6"
+    };
 
-const auth = getAuth(app);
 
-const database = getDatabase(app);
+    const app = initializeApp(firebaseConfig);
+
+    const auth = getAuth(app);
+
+    const database = getDatabase(app);
 
 
-async function iniciar() {
+    async function iniciar() {
 
-  const lista =
-  document.getElementById("lista");
+      const lista =
+        document.getElementById("lista");
 
-  try {
+      try {
 
-    await signInAnonymously(auth);
+        await signInAnonymously(auth);
 
-    const referencia =
-    ref(database, "mensajes");
+        const referencia =
+          ref(database, "mensajes");
 
-    const snapshot =
-    await get(referencia);
+        const snapshot =
+          await get(referencia);
 
-    if (!snapshot.exists()) {
 
-      lista.innerHTML =
-      '<div class="vacio">No hay mensajes todavía.</div>';
+        if (!snapshot.exists()) {
 
-      return;
+          lista.innerHTML =
+            '<div class="vacio">No hay mensajes todavía.</div>';
+
+          return;
+        }
+
+
+        const datos =
+          snapshot.val();
+
+        const mensajes =
+          Object.values(datos).reverse();
+
+        lista.innerHTML = "";
+
+
+        mensajes.forEach(m => {
+
+          const tarjeta =
+            document.createElement("div");
+
+          tarjeta.className =
+            "mensaje";
+
+
+          const nombre =
+            document.createElement("div");
+
+          nombre.className =
+            "nombre";
+
+          nombre.textContent =
+            "👤 " +
+            (m.nombre || "Sin nombre");
+
+
+          const contacto =
+            document.createElement("div");
+
+          contacto.className =
+            "dato";
+
+          contacto.textContent =
+            "📱 " +
+            (m.contacto || "Sin contacto");
+
+
+          const motivo =
+            document.createElement("div");
+
+          motivo.className =
+            "dato";
+
+          motivo.textContent =
+            "💬 " +
+            (m.motivo || "Sin mensaje");
+
+
+          const fecha =
+            document.createElement("div");
+
+          fecha.className =
+            "fecha";
+
+          fecha.textContent =
+            "🕒 " +
+            (m.fechaHora || "Sin fecha");
+
+
+          tarjeta.appendChild(nombre);
+          tarjeta.appendChild(contacto);
+          tarjeta.appendChild(motivo);
+          tarjeta.appendChild(fecha);
+
+          lista.appendChild(tarjeta);
+
+        });
+
+
+      } catch (error) {
+
+        console.error(error);
+
+        lista.innerHTML =
+          '<div class="vacio">⚠️ No se pudieron cargar los mensajes.</div>';
+
+      }
+
     }
 
 
-    const datos =
-    snapshot.val();
+    iniciar();
 
-    const mensajes =
-    Object.values(datos).reverse();
-
-    lista.innerHTML = "";
-
-
-    mensajes.forEach(m => {
-
-      const tarjeta =
-      document.createElement("div");
-
-      tarjeta.className =
-      "mensaje";
-
-
-      const nombre =
-      document.createElement("div");
-
-      nombre.className =
-      "nombre";
-
-      nombre.textContent =
-      "👤 " +
-      (m.nombre || "Sin nombre");
-
-
-      const contacto =
-      document.createElement("div");
-
-      contacto.className =
-      "dato";
-
-      contacto.textContent =
-      "📱 " +
-      (m.contacto || "Sin contacto");
-
-
-      const motivo =
-      document.createElement("div");
-
-      motivo.className =
-      "dato";
-
-      motivo.textContent =
-      "💬 " +
-      (m.motivo || "Sin mensaje");
-
-
-      const fecha =
-      document.createElement("div");
-
-      fecha.className =
-      "fecha";
-
-      fecha.textContent =
-      "🕒 " +
-      (m.fechaHora || "Sin fecha");
-
-
-      tarjeta.appendChild(nombre);
-
-      tarjeta.appendChild(contacto);
-
-      tarjeta.appendChild(motivo);
-
-      tarjeta.appendChild(fecha);
-
-      lista.appendChild(tarjeta);
-
-    });
-
-
-  } catch (error) {
-
-    console.error(error);
-
-    lista.innerHTML =
-    '<div class="vacio">⚠️ No se pudieron cargar los mensajes.</div>';
-
-  }
-
-}
-
-
-iniciar();
-
-</script>
+  </script>
 
 </body>
 </html>
+
