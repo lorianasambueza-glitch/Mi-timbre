@@ -158,9 +158,7 @@
 
   <div id="zonaTimbre" class="oculto">
 
-    <p>
-      ¿Estás afuera? Tocá el timbre para avisarnos que llegaste.
-    </p>
+    <p>¿Estás afuera? Tocá el timbre para avisarnos que llegaste.</p>
 
     <button id="btnTimbre" onclick="tocarTimbre()">
       🔔 TOCAR TIMBRE
@@ -171,47 +169,27 @@
   </div>
 
   <div id="mensajeAusente" class="oculto">
-
     <p>
       En este momento no nos encontramos.
       Si querés, podés dejarnos tus datos y contarnos a qué viniste.
     </p>
-
   </div>
 
   <div class="formulario">
 
     <h2>📝 Dejar un mensaje</h2>
 
-    <p>
-      También podés dejarnos tus datos para que podamos contactarte.
-    </p>
+    <p>También podés dejarnos tus datos para que podamos contactarte.</p>
 
     <label for="nombre">Nombre</label>
-
-    <input
-      type="text"
-      id="nombre"
-      maxlength="60"
-      placeholder="Tu nombre"
-    >
+    <input type="text" id="nombre" maxlength="40" placeholder="Tu nombre">
 
     <label for="contacto">Teléfono o WhatsApp</label>
-
-    <input
-      type="text"
-      id="contacto"
-      maxlength="40"
-      placeholder="Ej: 299..."
-    >
+    <input type="text" id="contacto" maxlength="40" placeholder="Ej: 299...">
 
     <label for="motivo">¿A qué viniste?</label>
-
-    <textarea
-      id="motivo"
-      maxlength="300"
-      placeholder="Ej: Vine a retirar un pedido..."
-    ></textarea>
+    <textarea id="motivo" maxlength="300"
+      placeholder="Ej: Vine a retirar un pedido..."></textarea>
 
     <button id="btnEnviar" onclick="enviarMensaje()">
       💌 ENVIAR MENSAJE
@@ -227,75 +205,52 @@
 
 </div>
 
-
 <script>
 
 const FIREBASE =
-"https://mi-timbre-23084-default-rtdb.firebaseio.com";
+  "https://mi-timbre-23084-default-rtdb.firebaseio.com";
 
 const TOPIC =
-"timbre-loly-Nqn-84726-XP";
+  "timbre-loly-Nqn-84726-XP";
 
 
 /* CONSULTAR DISPONIBILIDAD */
 
 async function consultarEstado() {
 
-  const estado =
-    document.getElementById("estado");
-
-  const zonaTimbre =
-    document.getElementById("zonaTimbre");
-
-  const mensajeAusente =
-    document.getElementById("mensajeAusente");
+  const estado = document.getElementById("estado");
+  const zonaTimbre = document.getElementById("zonaTimbre");
+  const mensajeAusente = document.getElementById("mensajeAusente");
 
   try {
 
     const respuesta = await fetch(
-      FIREBASE +
-      "/estado/disponible.json?nocache=" +
-      Date.now()
+      FIREBASE + "/estado/disponible.json?nocache=" + Date.now()
     );
 
-    const disponible =
-      await respuesta.json();
-
+    const disponible = await respuesta.json();
 
     if (disponible === true) {
 
-      estado.innerText =
-        "🟢 Estamos disponibles";
-
-      estado.className =
-        "disponible";
+      estado.innerText = "🟢 Estamos disponibles";
+      estado.className = "disponible";
 
       zonaTimbre.classList.remove("oculto");
-
       mensajeAusente.classList.add("oculto");
 
     } else {
 
-      estado.innerText =
-        "🔴 En este momento no nos encontramos";
-
-      estado.className =
-        "nodisponible";
+      estado.innerText = "🔴 En este momento no nos encontramos";
+      estado.className = "nodisponible";
 
       zonaTimbre.classList.add("oculto");
-
       mensajeAusente.classList.remove("oculto");
-
     }
 
   } catch (error) {
 
-    estado.innerText =
-      "No pudimos consultar la disponibilidad";
-
-    estado.className =
-      "cargando";
-
+    estado.innerText = "No pudimos consultar la disponibilidad";
+    estado.className = "cargando";
   }
 }
 
@@ -304,43 +259,31 @@ async function consultarEstado() {
 
 async function tocarTimbre() {
 
-  const boton =
-    document.getElementById("btnTimbre");
-
-  const mensaje =
-    document.getElementById("mensajeTimbre");
+  const boton = document.getElementById("btnTimbre");
+  const mensaje = document.getElementById("mensajeTimbre");
 
   boton.disabled = true;
-
-  boton.innerText =
-    "Avisando... 🔔";
-
+  boton.innerText = "Avisando... 🔔";
+  mensaje.innerText = "";
 
   try {
 
-    await fetch(
+    const respuesta = await fetch(
       "https://ntfy.sh/" + TOPIC,
       {
         method: "POST",
-
-        headers: {
-          "Title": "🔔 Timbre LS Impresiones",
-          "Priority": "high",
-          "Tags": "bell"
-        },
-
-        body:
-          "Hay alguien en la puerta."
+        body: "🔔 Hay alguien en la puerta"
       }
     );
 
+    if (!respuesta.ok) {
+      throw new Error("No se pudo enviar");
+    }
 
     mensaje.innerText =
       "✓ Listo, ya avisamos que estás afuera.";
 
-    boton.innerText =
-      "✓ TIMBRE ENVIADO";
-
+    boton.innerText = "✓ TIMBRE ENVIADO";
 
   } catch (error) {
 
@@ -348,22 +291,18 @@ async function tocarTimbre() {
       "No se pudo enviar el aviso. Intentá nuevamente.";
 
     boton.disabled = false;
+    boton.innerText = "🔔 TOCAR TIMBRE";
 
-    boton.innerText =
-      "🔔 TOCAR TIMBRE";
-
+    return;
   }
-
 
   setTimeout(function() {
 
     boton.disabled = false;
-
-    boton.innerText =
-      "🔔 TOCAR TIMBRE";
+    boton.innerText = "🔔 TOCAR TIMBRE";
+    mensaje.innerText = "";
 
   }, 30000);
-
 }
 
 
@@ -386,32 +325,25 @@ async function enviarMensaje() {
   const boton =
     document.getElementById("btnEnviar");
 
-
   if (!nombre || !contacto || !motivo) {
 
     respuestaFormulario.innerText =
       "Por favor completá los tres campos.";
 
     return;
-
   }
 
-
   boton.disabled = true;
-
-  boton.innerText =
-    "Enviando...";
-
+  boton.innerText = "Enviando...";
+  respuestaFormulario.innerText = "";
 
   const fechaHora =
     new Date().toLocaleString(
       "es-AR",
       {
-        timeZone:
-          "America/Argentina/Buenos_Aires"
+        timeZone: "America/Argentina/Buenos_Aires"
       }
     );
-
 
   try {
 
@@ -423,8 +355,7 @@ async function enviarMensaje() {
         method: "POST",
 
         headers: {
-          "Content-Type":
-            "application/json"
+          "Content-Type": "application/json"
         },
 
         body: JSON.stringify({
@@ -436,70 +367,45 @@ async function enviarMensaje() {
       }
     );
 
-
     if (!guardar.ok) {
-
-      throw new Error(
-        "No se pudo guardar"
-      );
-
+      throw new Error("No se pudo guardar");
     }
 
 
-    /* NOTIFICACIÓN CON LOS DATOS */
+    /* AVISAR POR NTFY */
+
+    const textoNotificacion =
+      "Nueva visita\n" +
+      "Nombre: " + nombre + "\n" +
+      "Contacto: " + contacto + "\n" +
+      "Mensaje: " + motivo;
 
     try {
-
-      const textoNotificacion =
-        "👤 " + nombre +
-        "\n📱 " + contacto +
-        "\n💬 " + motivo;
-
 
       await fetch(
         "https://ntfy.sh/" + TOPIC,
         {
           method: "POST",
-
-          headers: {
-            "Title":
-              "📩 Nueva visita - LS Impresiones",
-
-            "Priority":
-              "high",
-
-            "Tags":
-              "bell"
-          },
-
-          body:
-            textoNotificacion
+          body: textoNotificacion
         }
       );
 
-    } catch (e) {
+    } catch (errorNtfy) {
 
       console.log(
-        "El mensaje se guardó pero falló la notificación."
+        "El mensaje se guardó, pero no se pudo enviar la notificación."
       );
-
     }
 
 
     respuestaFormulario.innerText =
       "✓ ¡Gracias! Tu mensaje fue enviado.";
 
-
     document.getElementById("nombre").value = "";
-
     document.getElementById("contacto").value = "";
-
     document.getElementById("motivo").value = "";
 
-
-    boton.innerText =
-      "✓ MENSAJE ENVIADO";
-
+    boton.innerText = "✓ MENSAJE ENVIADO";
 
   } catch (error) {
 
@@ -507,24 +413,17 @@ async function enviarMensaje() {
       "No se pudo enviar el mensaje. Intentá nuevamente.";
 
     boton.disabled = false;
-
-    boton.innerText =
-      "💌 ENVIAR MENSAJE";
+    boton.innerText = "💌 ENVIAR MENSAJE";
 
     return;
-
   }
-
 
   setTimeout(function() {
 
     boton.disabled = false;
-
-    boton.innerText =
-      "💌 ENVIAR MENSAJE";
+    boton.innerText = "💌 ENVIAR MENSAJE";
 
   }, 10000);
-
 }
 
 
